@@ -17,28 +17,13 @@ public class NotificationListener {
 
     // queue name must match booking-service1 config (booking.queue)
     @RabbitListener(queues = "${notification.queue.name:booking.queue}")
-    public void handleMessage(NotificationMessage msg) {
-        if (msg == null) {
-            System.out.println("Received null message - ignoring");
-            return;
-        }
-        try {
-            // basic validation
-            if (msg.getTo() == null || msg.getTo().isBlank()) {
-                System.err.println("Notification missing recipient: " + msg);
-                return;
-            }
-            // send (simulated)
-            emailService.send(msg);
-        } catch (Exception ex) {
-            // log and swallow - RabbitMQ can be configured to DLQ if needed
-            System.err.println("Failed to process notification: " + ex.getMessage());
-            ex.printStackTrace();
-        }
+    public void handleMessage(String msg) {
+        System.out.println("Notification received: " + msg);
     }
 
     // helper for tests to call directly
-    public void handleMessageDirect(NotificationMessage msg) {
+    public void handleMessageDirect(String msg) {
         handleMessage(msg);
     }
+
 }

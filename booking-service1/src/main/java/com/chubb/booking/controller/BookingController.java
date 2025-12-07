@@ -28,7 +28,8 @@ public class BookingController {
             @RequestBody @Valid BookingRequest request,
             Principal principal
     ) {
-        if (principal == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    	if (principal == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
         String userEmail = principal.getName(); // in our setup username==email for simplicity
         Booking saved = bookingService.book(flightid, request, userEmail);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);

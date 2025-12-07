@@ -14,18 +14,20 @@ public class WebSecurityConfig {
 
     @Bean
     public InMemoryUserDetailsManager userDetailsService(PasswordEncoder encoder) {
-        // For simplicity username==email in these demo users
+
         var user = User.withUsername("user@example.com")
-                .password(encoder.encode("userpass"))
+                .password(encoder.encode("user123"))
                 .roles("USER")
                 .build();
 
         var admin = User.withUsername("admin@example.com")
-                .password(encoder.encode("adminpass"))
+                .password(encoder.encode("admin123"))
                 .roles("ADMIN")
                 .build();
+        System.out.println(">>> SECURITY CONFIG LOADED <<<");
 
         return new InMemoryUserDetailsManager(user, admin);
+        
     }
 
     @Bean
@@ -33,17 +35,23 @@ public class WebSecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    // 🔥 THE MOST IMPORTANT PART
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf().disable()
+
+        http
+            .csrf(cs -> cs.disable())
             .authorizeHttpRequests(auth -> auth
+                    // booking endpoint requires authenticated USER
                     .requestMatchers("/api/booking/flight/**").hasRole("USER")
+                    .requestMatchers("/api/booking/history/**").hasRole("USER")
                     .requestMatchers("/api/booking/ticket/**").permitAll()
-                    .requestMatchers("/api/booking/history/**").authenticated()
-                    .requestMatchers("/api/booking/cancel/**").authenticated()
+                    .requestMatchers("/api/booking/cancel/**").hasRole("USER")
+                    // everything else → authenticated
                     .anyRequest().authenticated()
             )
             .httpBasic();
+
         return http.build();
     }
 }
