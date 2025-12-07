@@ -1,0 +1,134 @@
+version: '3.9'
+
+services:
+
+  # ===================
+  # MongoDB
+  # ===================
+  mongodb:
+    image: mongo:6
+    container_name: mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  # ===================
+  # RabbitMQ + UI
+  # ===================
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  # ===================
+  # Eureka Server
+  # ===================
+  eureka-server:
+    build: ./eureka-server
+    container_name: eureka-server
+    restart: always
+    ports:
+      - "8761:8761"
+    depends_on:
+      - mongodb
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+
+  # ===================
+  # Config Server
+  # ===================
+  config-server1:
+    build: ./config-server1
+    container_name: config-server1
+    restart: always
+    ports:
+      - "8888:8888"
+    depends_on:
+      - eureka-server
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+
+  # ===================
+  # API Gateway
+  # ===================
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - config-server1
+      - eureka-server
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+
+  # ===================
+  # Flight Service
+  # ===================
+  flight-service:
+    build: ./flight-service
+    container_name: flight-service
+    restart: always
+    ports:
+      - "8091:8091"
+    depends_on:
+      - mongodb
+      - eureka-server
+      - config-server1
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/flightmicrodb
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+
+  # ===================
+  # Booking Service
+  # ===================
+  booking-service1:
+    build: ./booking-service1
+    container_name: booking-service1
+    restart: always
+    ports:
+      - "8092:8092"
+    depends_on:
+      - mongodb
+      - rabbitmq
+      - flight-service
+      - eureka-server
+      - config-server1
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/bookingmicrodb
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+
+  # ===================
+  # Notification Service
+  # ===================
+  notification-service1:
+    build: ./notification-service1
+    container_name: notification-service1
+    restart: always
+    ports:
+      - "8093:8093"
+    depends_on:
+      - rabbitmq
+      - eureka-server
+      - config-server1
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+
+volumes:
+  mongo_data:
