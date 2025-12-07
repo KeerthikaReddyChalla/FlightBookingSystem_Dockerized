@@ -10,20 +10,34 @@ public class NotificationListener {
 
     private final EmailService emailService;
 
-    // constructor injection (listener is not a controller so constructors are fine)
     public NotificationListener(EmailService emailService) {
         this.emailService = emailService;
     }
 
-    // queue name must match booking-service1 config (booking.queue)
+    // RabbitMQ listener (String)
     @RabbitListener(queues = "${notification.queue.name:booking.queue}")
     public void handleMessage(String msg) {
-        System.out.println("Notification received: " + msg);
+        System.out.println("Notification received (String): " + msg);
     }
 
-    // helper for tests to call directly
-    public void handleMessageDirect(String msg) {
-        handleMessage(msg);
-    }
+    // Test-only method (NotificationMessage)
+    public void handleMessageDirect(NotificationMessage msg) {
+        System.out.println("Notification received (Test Mode): " + msg);
 
+        if (msg == null) {
+            System.out.println("Received null message - ignoring");
+            return;
+        }
+
+        if (msg.getTo() == null || msg.getTo().isBlank()) {
+            System.err.println("Notification missing recipient: " + msg);
+            return;
+        }
+
+        try {
+            emailService.send(msg);
+        } catch (Exception ex) {
+            System.err.println("Failed to process notification: " + ex.getMessage());
+        }
+    }
 }

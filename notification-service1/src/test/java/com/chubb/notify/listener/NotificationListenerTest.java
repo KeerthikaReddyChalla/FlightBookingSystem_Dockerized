@@ -8,18 +8,20 @@ import org.mockito.Mockito;
 class NotificationListenerTest {
 
     @Test
-    void testHandleMessage_printsWithoutException() {
+    void testHandleMessageDirect_validMessage_callsEmailService() {
         EmailService emailService = Mockito.mock(EmailService.class);
         NotificationListener listener = new NotificationListener(emailService);
 
-        NotificationMessage msg = new NotificationMessage("user@example.com", "Test Subject", "Test Body");
+        NotificationMessage msg =
+                new NotificationMessage("user@example.com", "Test Subject", "Test Body");
+
         listener.handleMessageDirect(msg);
 
         Mockito.verify(emailService, Mockito.times(1)).send(Mockito.eq(msg));
     }
 
     @Test
-    void testHandleMessage_nullIsIgnored() {
+    void testHandleMessageDirect_nullMessage_noInteraction() {
         EmailService emailService = Mockito.mock(EmailService.class);
         NotificationListener listener = new NotificationListener(emailService);
 
@@ -29,13 +31,26 @@ class NotificationListenerTest {
     }
 
     @Test
-    void testHandleMessage_missingRecipient() {
+    void testHandleMessageDirect_missingRecipient_noInteraction() {
         EmailService emailService = Mockito.mock(EmailService.class);
         NotificationListener listener = new NotificationListener(emailService);
 
-        NotificationMessage msg = new NotificationMessage("", "S", "B");
+        NotificationMessage msg =
+                new NotificationMessage("", "Subject", "Body");
+
         listener.handleMessageDirect(msg);
 
+        Mockito.verifyNoInteractions(emailService);
+    }
+
+    @Test
+    void testHandleMessage_stringMessage_doesNotCallEmailService() {
+        EmailService emailService = Mockito.mock(EmailService.class);
+        NotificationListener listener = new NotificationListener(emailService);
+
+        listener.handleMessage("Some plain text message from RabbitMQ");
+
+        // handleMessage(String) DOES NOT send email
         Mockito.verifyNoInteractions(emailService);
     }
 }
