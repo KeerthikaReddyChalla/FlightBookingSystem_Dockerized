@@ -14,31 +14,24 @@ public class NotificationListener {
         this.emailService = emailService;
     }
 
-    // RabbitMQ listener
-    @RabbitListener(queues = "${notification.queue.name:booking.queue}")
-    public void handleMessage(String msg) {    
-        System.out.println("Notification received (String): " + msg);
-        
-    }
-
     
-    public void handleMessageDirect(NotificationMessage msg) {  
-        System.out.println("Notification received (Test Mode): " + msg);
+    @RabbitListener(queues = "${notification.queue.name:booking.queue}")
+    public void handleMessage(NotificationMessage msg) {
+        System.out.println("Received NotificationMessage: " + msg);
 
         if (msg == null) {
-            System.out.println("Received null message - ignoring");
+            System.out.println("Null message received");
             return;
         }
 
-        if (msg.getTo() == null || msg.getTo().isBlank()) {
-            System.err.println("Notification missing recipient: " + msg);
-            return;
-        }
+        emailService.send(msg);
+    }
 
-        try {
-            emailService.send(msg);  
-        } catch (Exception ex) {
-            System.err.println("Failed to process notification: " + ex.getMessage());
+  
+    public void handleMessageDirect(NotificationMessage msg) {
+        System.out.println("[TEST] Received NotificationMessage: " + msg);
+        if (msg != null && msg.getTo() != null && !msg.getTo().isBlank()) {
+            emailService.send(msg);
         }
     }
 }

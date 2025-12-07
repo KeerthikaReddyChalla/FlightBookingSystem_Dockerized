@@ -8,48 +8,37 @@ import org.mockito.Mockito;
 class NotificationListenerTest {
 
     @Test
-    void testHandleMessageDirect_validMessage_callsEmailService() {
+    void testHandleMessage_validMessage_callsEmailService() {
         EmailService emailService = Mockito.mock(EmailService.class);
         NotificationListener listener = new NotificationListener(emailService);
 
         NotificationMessage msg =
                 new NotificationMessage("user@example.com", "Test Subject", "Test Body");
 
-        listener.handleMessageDirect(msg);
+        // call the real Rabbit listener method (now accepts NotificationMessage)
+        listener.handleMessage(msg);
 
         Mockito.verify(emailService, Mockito.times(1)).send(Mockito.eq(msg));
     }
 
     @Test
-    void testHandleMessageDirect_nullMessage_noInteraction() {
+    void testHandleMessage_nullMessage_noInteraction() {
         EmailService emailService = Mockito.mock(EmailService.class);
         NotificationListener listener = new NotificationListener(emailService);
 
-        listener.handleMessageDirect(null);
+        listener.handleMessage(null);
 
         Mockito.verifyNoInteractions(emailService);
     }
 
     @Test
-    void testHandleMessageDirect_missingRecipient_noInteraction() {
+    void testHandleMessage_missingRecipient_noInteraction() {
         EmailService emailService = Mockito.mock(EmailService.class);
         NotificationListener listener = new NotificationListener(emailService);
 
-        NotificationMessage msg =
-                new NotificationMessage("", "Subject", "Body");
+        NotificationMessage msg = new NotificationMessage("", "Subject", "Body");
 
-        listener.handleMessageDirect(msg);
-
-        Mockito.verifyNoInteractions(emailService);
-    }
-
-    @Test
-    void testHandleMessage_stringMessage_doesNotCallEmailService() {
-        EmailService emailService = Mockito.mock(EmailService.class);
-        NotificationListener listener = new NotificationListener(emailService);
-
-        // This should not trigger emailService.send()
-        listener.handleMessage("Some plain text message from RabbitMQ");
+        listener.handleMessage(msg);
 
         Mockito.verifyNoInteractions(emailService);
     }
