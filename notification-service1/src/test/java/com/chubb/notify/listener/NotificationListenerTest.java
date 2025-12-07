@@ -48,9 +48,9 @@ class NotificationListenerTest {
         EmailService emailService = Mockito.mock(EmailService.class);
         NotificationListener listener = new NotificationListener(emailService);
 
+        // This should not trigger emailService.send()
         listener.handleMessage("Some plain text message from RabbitMQ");
 
-        // handleMessage(String) DOES NOT send email
         Mockito.verifyNoInteractions(emailService);
     }
 }

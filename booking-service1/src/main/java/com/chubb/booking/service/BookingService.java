@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import com.chubb.booking.dto.NotificationMessage;
 
 @Service
 public class BookingService {
@@ -30,9 +31,11 @@ public class BookingService {
 
     public Booking book(String flightId, BookingRequest req, String principalEmail) {
         // ensure logged-in user
-        if (principalEmail == null || !principalEmail.equalsIgnoreCase(req.getEmail())) {
-            throw new BadRequestException("Authenticated user email does not match booking email");
-        }
+    	// allow booking with any email
+    	if (principalEmail == null) {
+    	    throw new BadRequestException("User must be logged in to book a flight");
+    	}
+
 
         FlightInventoryDto flight = flightClient.getById(flightId);
         if (flight == null) throw new BadRequestException("Flight not found");
@@ -55,9 +58,21 @@ public class BookingService {
 
         Booking saved = repo.save(b);
 
-        // publish message for notification (simple map object)
-        var msg = String.format("Booking confirmed for %s, PNR: %s", saved.getEmail(), saved.getPnr());
+        NotificationMessage msg = new NotificationMessage(
+                saved.getEmail(),
+                "Your Flight Booking is Confirmed! PNR: " + saved.getPnr(),
+                "Hello " + saved.getName() + ",\n\n" +
+                "Your booking was successful!\n\n" +
+                "PNR: " + saved.getPnr() + "\n" +
+                "Seats Booked: " + saved.getSeats() + "\n\n" +
+                "Thank you for choosing our service!"
+        );
+
         amqp.convertAndSend(RabbitConfig.EXCHANGE, RabbitConfig.ROUTING_KEY, msg);
+
+
+       
+
 
         return saved;
     }

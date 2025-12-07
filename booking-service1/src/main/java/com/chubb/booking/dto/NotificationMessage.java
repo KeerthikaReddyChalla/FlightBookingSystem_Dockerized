@@ -1,4 +1,4 @@
-package com.chubb.notify.model;
+package com.chubb.booking.dto;
 
 public class NotificationMessage {
 
@@ -14,7 +14,6 @@ public class NotificationMessage {
         this.body = body;
     }
 
-    // getters + setters
     public String getTo() { return to; }
     public void setTo(String to) { this.to = to; }
 

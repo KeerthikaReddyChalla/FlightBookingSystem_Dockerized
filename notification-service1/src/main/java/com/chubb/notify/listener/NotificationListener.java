@@ -14,14 +14,15 @@ public class NotificationListener {
         this.emailService = emailService;
     }
 
-    // RabbitMQ listener (String)
+    // RabbitMQ listener
     @RabbitListener(queues = "${notification.queue.name:booking.queue}")
-    public void handleMessage(String msg) {
+    public void handleMessage(String msg) {    
         System.out.println("Notification received (String): " + msg);
+        
     }
 
-    // Test-only method (NotificationMessage)
-    public void handleMessageDirect(NotificationMessage msg) {
+    
+    public void handleMessageDirect(NotificationMessage msg) {  
         System.out.println("Notification received (Test Mode): " + msg);
 
         if (msg == null) {
@@ -35,7 +36,7 @@ public class NotificationListener {
         }
 
         try {
-            emailService.send(msg);
+            emailService.send(msg);  
         } catch (Exception ex) {
             System.err.println("Failed to process notification: " + ex.getMessage());
         }
