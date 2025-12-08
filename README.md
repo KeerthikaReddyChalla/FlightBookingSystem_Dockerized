@@ -14,8 +14,6 @@ This system uses:
 
 -RabbitMQ for communication
 
--JWT-based authentication through API Gateway
-
 -Configuration management via Spring Cloud Config
 
 -Service discovery using Eureka
