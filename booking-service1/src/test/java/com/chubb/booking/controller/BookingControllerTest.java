@@ -1,5 +1,6 @@
 package com.chubb.booking.controller;
 
+import com.chubb.booking.config.TestSecurityConfig;
 import com.chubb.booking.dto.BookingRequest;
 import com.chubb.booking.model.Booking;
 import com.chubb.booking.model.Passenger;
@@ -10,6 +11,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -22,6 +24,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(BookingController.class)
+@Import(TestSecurityConfig.class)
 class BookingControllerTest {
 
     @Autowired MockMvc mockMvc;
