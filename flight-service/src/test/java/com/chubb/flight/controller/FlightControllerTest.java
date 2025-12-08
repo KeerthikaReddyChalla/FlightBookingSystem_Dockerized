@@ -1,5 +1,6 @@
 package com.chubb.flight.controller;
 
+import com.chubb.flight.config.TestSecurityConfig;
 import com.chubb.flight.exception.FlightNotFoundException;
 import com.chubb.flight.model.FlightInventory;
 import com.chubb.flight.service.FlightService;
@@ -9,6 +10,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -20,6 +22,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(FlightController.class)
+@Import(TestSecurityConfig.class)
 class FlightControllerTest {
 
     @Autowired
