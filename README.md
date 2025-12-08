@@ -1,11 +1,6 @@
 # **Flight Booking Microservices Application**
 
-This is a Flight Booking System built using Spring Boot Microservices, MongoDB, Spring Security, RabbitMQ, Eureka, Spring Cloud Config, and Docker.
-
-The system allows users to search flights, book tickets, generate PNRs, view booking history, and receive booking notifications via email.
-Administrators can manage flight inventory, seats, and airline data.
-
-The entire application is fully containerized using *Docker Compose.*
+This is a Flight Booking System built using Spring Boot Microservices, MongoDB, Spring Security, RabbitMQ, Eureka, Spring Cloud Config, and Docker. The system allows users to search flights, book tickets, generate PNRs, view booking history, and receive booking notifications via email. Administrators can manage flight inventory, seats, and airline data. The entire application is fully containerized using **Docker Compose.**
 
 ## Project Overview
 
