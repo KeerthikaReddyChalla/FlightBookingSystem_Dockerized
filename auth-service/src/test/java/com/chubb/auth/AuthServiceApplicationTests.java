@@ -1,11 +1,10 @@
-package com.chubb.booking;
+package com.chubb.auth;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-
 @SpringBootTest
-class BookingService1ApplicationTests {
+class AuthServiceApplicationTests {
 
 	@Test
 	void contextLoads() {
