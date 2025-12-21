@@ -43,6 +43,8 @@ public class BookingService {
         if (req.getSeats() > (flight.getAvailableSeats() == null ? 0 : flight.getAvailableSeats())) {
             throw new BadRequestException("Not enough seats available");
         }
+        //decrease seats after booking
+        flightClient.decreaseSeats(flightId, req.getSeats());
 
         Booking b = new Booking();
         b.setFlightId(flightId);
@@ -94,10 +96,29 @@ public class BookingService {
         if (b.getFlightDeparture().isBefore(LocalDateTime.now().plusHours(24))) {
             throw new BadRequestException("Cannot cancel within 24 hours of departure");
         }
+        //increase seats if booking cancelled
+        flightClient.increaseSeats(b.getFlightId(), b.getSeats());
         b.setCancelled(true);
         repo.save(b);
-        var msg = String.format("Booking cancelled for %s, PNR: %s", b.getEmail(), b.getPnr());
-        amqp.convertAndSend(RabbitConfig.EXCHANGE, "booking.cancel", msg);
+        //cancellation email
+        NotificationMessage notification = new NotificationMessage(
+        	    b.getEmail(),
+        	    "Flight Ticket Cancelled - PNR " + b.getPnr(),
+        	    "Dear Customer,\n\n" +
+        	    "Your flight ticket has been successfully cancelled.\n\n" +
+        	    "PNR: " + b.getPnr() + "\n" +
+        	    "Flight ID: " + b.getFlightId() + "\n" +
+        	    "Cancelled Seats: " + b.getSeats() + "\n\n" +
+        	    "If you have any questions, please contact support.\n\n" +
+        	    "Regards,\nFlight Booking Team"
+        	);
+
+        	amqp.convertAndSend(
+        	    RabbitConfig.EXCHANGE,
+        	    RabbitConfig.ROUTING_KEY,   
+        	    notification
+        	);
+
     }
 
     private String generatePnr() {
