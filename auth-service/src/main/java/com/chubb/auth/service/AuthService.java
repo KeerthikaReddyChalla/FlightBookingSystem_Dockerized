@@ -3,6 +3,7 @@ package com.chubb.auth.service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.chubb.auth.ChangePasswordRequest;
 import com.chubb.auth.dto.JwtResponse;
 import com.chubb.auth.dto.LoginRequest;
 import com.chubb.auth.dto.RegisterRequest;
@@ -53,5 +54,18 @@ public class AuthService {
         String token = jwtUtil.generateToken( user.getName(),  user.getRole(), user.getEmail());
         return new JwtResponse(token);
     }
+    public void changePassword(String email, ChangePasswordRequest req) {
+
+        User user = repo.findByEmail(email)
+                .orElseThrow();
+
+        if (!encoder.matches(req.getOldPassword(), user.getPassword())) {
+            throw new RuntimeException("Old password incorrect");
+        }
+
+        user.setPassword(encoder.encode(req.getNewPassword()));
+        repo.save(user);
+    }
+
 }
 

@@ -1,12 +1,15 @@
 package com.chubb.auth.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.chubb.auth.ChangePasswordRequest;
 import com.chubb.auth.dto.JwtResponse;
 import com.chubb.auth.dto.LoginRequest;
 import com.chubb.auth.dto.RegisterRequest;
@@ -32,5 +35,13 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<JwtResponse> login(@RequestBody LoginRequest req) {
         return ResponseEntity.ok(authService.login(req));
+    }
+    @PutMapping("/change-password")
+    public ResponseEntity<?> changePassword(
+            @RequestBody ChangePasswordRequest req,
+            Authentication auth
+    ) {
+        authService.changePassword(auth.getName(), req);
+        return ResponseEntity.ok("Password updated");
     }
 }
