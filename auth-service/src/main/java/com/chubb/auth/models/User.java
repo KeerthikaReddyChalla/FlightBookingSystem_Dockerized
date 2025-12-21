@@ -3,6 +3,7 @@ package com.chubb.auth.models;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import jakarta.persistence.Column;
 import lombok.Data;
 
 @Data
@@ -11,7 +12,8 @@ public class User {
 
     @Id
     private String id;  
-
+    private String name;
+    @Column(nullable = false, unique = true)
     private String email;
     private String password;
     private String role;

@@ -6,9 +6,12 @@ import org.springframework.stereotype.Service;
 import com.chubb.auth.dto.JwtResponse;
 import com.chubb.auth.dto.LoginRequest;
 import com.chubb.auth.dto.RegisterRequest;
+import com.chubb.auth.exception.UserAlreadyExistsException;
 import com.chubb.auth.models.User;
 import com.chubb.auth.repository.UserRepository;
 import com.chubb.auth.security.JwtUtil;
+
+import jakarta.ws.rs.BadRequestException;
 
 @Service
 public class AuthService {
@@ -24,7 +27,15 @@ public class AuthService {
     }
 
     public void register(RegisterRequest req) {
+    	  if (repo.existsByEmail(req.getEmail())) {
+    	        throw new UserAlreadyExistsException("User already registered");
+    	    }
+    	  if (req.getName() == null || req.getName().isBlank()) {
+    		    throw new BadRequestException("Name is required");
+    		}
+
         User user = new User();
+        user.setName(req.getName());
         user.setEmail(req.getEmail());
         user.setPassword(encoder.encode(req.getPassword()));
         user.setRole("ROLE_USER");
@@ -39,7 +50,7 @@ public class AuthService {
             throw new RuntimeException("Invalid credentials");
         }
 
-        String token = jwtUtil.generateToken(user.getEmail(), user.getRole());
+        String token = jwtUtil.generateToken( user.getName(),  user.getRole(), user.getEmail());
         return new JwtResponse(token);
     }
 }

@@ -29,10 +29,11 @@ public class JwtUtil {
 
     /* ================= TOKEN GENERATION ================= */
 
-    public String generateToken(String username, String role) {
+    public String generateToken(String name, String role, String email) {
         return Jwts.builder()
-                .setSubject(username)
-                .claim("role", role)
+        		.claim("name", name) 
+        		.claim("role", role)
+        		.setSubject(email)             
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -63,7 +64,13 @@ public class JwtUtil {
                 .parseClaimsJws(token)
                 .getBody();
     }
-
+    public Claims extractAllClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
     private boolean isTokenExpired(String token) {
         return extractClaims(token).getExpiration().before(new Date());
     }
