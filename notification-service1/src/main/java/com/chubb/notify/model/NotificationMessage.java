@@ -1,6 +1,8 @@
 package com.chubb.notify.model;
 
-public class NotificationMessage {
+import java.io.Serializable;
+
+public class NotificationMessage implements Serializable{
 
     private String to;
     private String subject;
