@@ -37,8 +37,6 @@ services:
     restart: always
     ports:
       - "8761:8761"
-    depends_on:
-      - mongodb
     environment:
       SPRING_PROFILES_ACTIVE: docker
 
@@ -57,6 +55,24 @@ services:
       SPRING_PROFILES_ACTIVE: docker
 
   # ===================
+  # Auth Service
+  # ===================
+  auth-service:
+    build: ./auth-service
+    container_name: auth-service
+    restart: always
+    ports:
+      - "9000:9000"
+    depends_on:
+      - mongodb
+      - eureka-server
+      - config-server1
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/authdb
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+
+  # ===================
   # API Gateway
   # ===================
   api-gateway:
@@ -66,6 +82,7 @@ services:
     ports:
       - "8080:8080"
     depends_on:
+      - auth-service
       - config-server1
       - eureka-server
     environment:
@@ -107,9 +124,9 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/bookingmicrodb
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_PORT: 5672
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
 
   # ===================
   # Notification Service
