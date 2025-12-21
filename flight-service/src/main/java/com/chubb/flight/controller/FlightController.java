@@ -1,6 +1,7 @@
 package com.chubb.flight.controller;
 
 import com.chubb.flight.model.FlightInventory;
+import com.chubb.flight.model.Seat;
 import com.chubb.flight.service.FlightService;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -50,5 +51,19 @@ public class FlightController {
     public void increaseSeats(@PathVariable String id, @PathVariable int count) {
         service.increaseSeats(id, count);
     }
+    //seat map
+    @GetMapping("/airline/inventory/{flightId}/seats")
+    public ResponseEntity<List<Seat>> getSeats(@PathVariable String flightId) {
+        return ResponseEntity.ok(service.getSeats(flightId));
+    }
+    @PutMapping("/airline/inventory/{flightId}/lock-seats")
+    public ResponseEntity<Void> lockSeats(
+            @PathVariable String flightId,
+            @RequestBody List<String> seatNumbers
+    ) {
+        service.lockSeats(flightId, seatNumbers);
+        return ResponseEntity.ok().build();
+    }
+
 
 }

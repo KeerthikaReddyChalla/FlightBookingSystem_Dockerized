@@ -6,6 +6,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Document(collection = "flight_inventory")
 public class FlightInventory {
@@ -37,8 +38,15 @@ public class FlightInventory {
     private Integer availableSeats;
 
     private boolean oneWay;
+    private List<Seat> seats;
 
-    // Getters and Setters
+    public List<Seat> getSeats() {
+		return seats;
+	}
+	public void setSeats(List<Seat> seats) {
+		this.seats = seats;
+	}
+	// Getters and Setters
     // (generated or manually added)
     // ---------------------------
     public String getId() { return id; }

@@ -3,7 +3,7 @@ package com.chubb.auth.service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.chubb.auth.ChangePasswordRequest;
+import com.chubb.auth.dto.ChangePasswordRequest;
 import com.chubb.auth.dto.JwtResponse;
 import com.chubb.auth.dto.LoginRequest;
 import com.chubb.auth.dto.RegisterRequest;

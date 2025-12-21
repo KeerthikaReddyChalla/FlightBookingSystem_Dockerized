@@ -1,4 +1,4 @@
-package com.chubb.auth;
+package com.chubb.auth.dto;
 
 import lombok.Data;
 

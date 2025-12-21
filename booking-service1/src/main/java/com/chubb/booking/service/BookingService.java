@@ -30,6 +30,8 @@ public class BookingService {
     }
 
     public Booking book(String flightId, BookingRequest req, String principalEmail) {
+    	
+    	
         // ensure logged-in user
     	// allow booking with any email
     	if (principalEmail == null) {
@@ -45,7 +47,7 @@ public class BookingService {
         }
         //decrease seats after booking
         flightClient.decreaseSeats(flightId, req.getSeats());
-
+        flightClient.lockSeats(flightId, req.getSeatNumbers());
         Booking b = new Booking();
         b.setFlightId(flightId);
         b.setName(req.getName());

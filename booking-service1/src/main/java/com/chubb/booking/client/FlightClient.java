@@ -1,9 +1,14 @@
 package com.chubb.booking.client;
 
 import com.chubb.booking.dto.FlightInventoryDto;
+
+import java.util.List;
+
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PathVariable;
 
 @FeignClient(name = "flight-service")
@@ -24,4 +29,10 @@ public interface FlightClient {
         @PathVariable("id") String flightId,
         @PathVariable("count") int count
     );
+    @PutMapping("/api/flight/airline/inventory/{flightId}/lock-seats")
+    void lockSeats(
+        @PathVariable String flightId,
+        @RequestBody List<String> seatNumbers
+    );
+
 }
