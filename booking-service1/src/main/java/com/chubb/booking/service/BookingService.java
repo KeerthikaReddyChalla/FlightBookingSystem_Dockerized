@@ -99,7 +99,11 @@ public class BookingService {
             throw new BadRequestException("Cannot cancel within 24 hours of departure");
         }
         //increase seats if booking cancelled
-        flightClient.increaseSeats(b.getFlightId(), b.getSeats());
+//        flightClient.increaseSeats(b.getFlightId(), b.getSeats());
+        flightClient.unbookSeats(
+        	    b.getFlightId(),
+        	    b.getSeatNumbers()
+        	);
         b.setCancelled(true);
         repo.save(b);
         //cancellation email

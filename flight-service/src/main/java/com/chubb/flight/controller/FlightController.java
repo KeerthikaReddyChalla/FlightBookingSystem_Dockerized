@@ -64,6 +64,16 @@ public class FlightController {
         service.lockSeats(flightId, seatNumbers);
         return ResponseEntity.ok().build();
     }
+    //un-booking seats
+    @PutMapping("/airline/inventory/{flightId}/seats/unbook")
+    public ResponseEntity<Void> unbookSeats(
+            @PathVariable String flightId,
+            @RequestBody List<String> seatNumbers
+    ) {
+        service.unbookSeats(flightId, seatNumbers);
+        return ResponseEntity.ok().build();
+    }
+
 
 
 }

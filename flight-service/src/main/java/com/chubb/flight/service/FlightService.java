@@ -97,6 +97,24 @@ public class FlightService {
 
         repo.save(flight);
     }
+    public void unbookSeats(String flightId, List<String> seatNumbers) {
+
+        FlightInventory flight = repo.findById(flightId)
+                .orElseThrow(() -> new RuntimeException("Flight not found"));
+
+        for (Seat seat : flight.getSeats()) {
+            if (seatNumbers.contains(seat.getSeatNumber())) {
+                seat.setBooked(false); 
+            }
+        }
+
+        flight.setAvailableSeats(
+                flight.getAvailableSeats() + seatNumbers.size()
+        );
+
+        repo.save(flight);
+    }
+
 
 
 }
