@@ -29,4 +29,24 @@ public class FlightService {
         return repo.findById(id)
                 .orElseThrow(() -> new FlightNotFoundException("Flight not found with ID: " + id));
     }
+    public void decreaseSeats(String flightId, int count) {
+        FlightInventory f = repo.findById(flightId)
+            .orElseThrow(() -> new RuntimeException("Flight not found"));
+
+        if (f.getAvailableSeats() < count) {
+            throw new RuntimeException("Not enough seats");
+        }
+
+        f.setAvailableSeats(f.getAvailableSeats() - count);
+        repo.save(f);
+    }
+
+    public void increaseSeats(String flightId, int count) {
+        FlightInventory f = repo.findById(flightId)
+            .orElseThrow(() -> new RuntimeException("Flight not found"));
+
+        f.setAvailableSeats(f.getAvailableSeats() + count);
+        repo.save(f);
+    }
+
 }

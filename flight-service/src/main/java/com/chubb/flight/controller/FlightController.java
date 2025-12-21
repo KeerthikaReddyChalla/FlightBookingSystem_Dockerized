@@ -41,4 +41,14 @@ public class FlightController {
     public ResponseEntity<FlightInventory> getById(@PathVariable String id) {
         return ResponseEntity.ok(service.getById(id));
     }
+    @PutMapping("/{id}/seats/decrease/{count}")
+    public void decreaseSeats(@PathVariable String id, @PathVariable int count) {
+        service.decreaseSeats(id, count);
+    }
+
+    @PutMapping("/{id}/seats/increase/{count}")
+    public void increaseSeats(@PathVariable String id, @PathVariable int count) {
+        service.increaseSeats(id, count);
+    }
+
 }
