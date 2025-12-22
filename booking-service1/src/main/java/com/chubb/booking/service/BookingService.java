@@ -47,6 +47,7 @@ public class BookingService {
         }
         //decrease seats after booking
         flightClient.decreaseSeats(flightId, req.getSeats());
+        flightClient.bookSeats(flightId, req.getSeatNumbers());
         flightClient.lockSeats(flightId, req.getSeatNumbers());
         Booking b = new Booking();
         b.setFlightId(flightId);
@@ -105,6 +106,8 @@ public class BookingService {
         	    b.getSeatNumbers()
         	);
         b.setCancelled(true);
+       // b.setSeatNumbers(req.getSeatNumbers());
+
         repo.save(b);
         //cancellation email
         NotificationMessage notification = new NotificationMessage(

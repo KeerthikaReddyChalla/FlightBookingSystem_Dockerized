@@ -77,8 +77,15 @@ public class FlightController {
     public ResponseEntity<List<FlightInventory>> getAllInventories() {
         return ResponseEntity.ok(service.getAllInventories());
     }
-
-
+    @PutMapping("/airline/inventory/{flightId}/seats/book")
+    public ResponseEntity<Void> bookSeats(
+            @PathVariable String flightId,
+            @RequestBody List<String> seatNumbers
+    ) {
+        service.bookSeats(flightId, seatNumbers);
+        return ResponseEntity.ok().build();
+    }
+    
 
 
 }

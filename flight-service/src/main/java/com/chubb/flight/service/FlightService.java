@@ -118,6 +118,26 @@ public class FlightService {
     public List<FlightInventory> getAllInventories() {
         return repo.findAll();
     }
+    public void bookSeats(String flightId, List<String> requestedSeats) {
+        FlightInventory flight = repo.findById(flightId)
+            .orElseThrow(() -> new RuntimeException("Flight not found"));
+
+        for (Seat seat : flight.getSeats()) {
+            if (requestedSeats.contains(seat.getSeatNumber())) {
+                if (seat.isBooked()) {
+                    throw new RuntimeException("Seat already booked");
+                }
+                seat.setBooked(true);
+            }
+        }
+
+        flight.setAvailableSeats(
+            flight.getAvailableSeats() - requestedSeats.size()
+        );
+
+        repo.save(flight);
+    }
+
 
 
 }

@@ -39,6 +39,11 @@ public interface FlightClient {
             @PathVariable String flightId,
             @RequestBody List<String> seatNumbers
     );
+    @PutMapping("/api/flight/airline/inventory/{flightId}/seats/book")
+    void bookSeats(
+        @PathVariable String flightId,
+        @RequestBody List<String> seatNumbers
+    );
 
 
 }
