@@ -115,6 +115,9 @@ public class FlightService {
         repo.save(flight);
     }
 
+    public List<FlightInventory> getAllInventories() {
+        return repo.findAll();
+    }
 
 
 }

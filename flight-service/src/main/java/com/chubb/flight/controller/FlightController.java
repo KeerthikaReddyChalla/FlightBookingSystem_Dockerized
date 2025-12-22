@@ -73,6 +73,11 @@ public class FlightController {
         service.unbookSeats(flightId, seatNumbers);
         return ResponseEntity.ok().build();
     }
+    @GetMapping("/airline/inventory/all")
+    public ResponseEntity<List<FlightInventory>> getAllInventories() {
+        return ResponseEntity.ok(service.getAllInventories());
+    }
+
 
 
 
