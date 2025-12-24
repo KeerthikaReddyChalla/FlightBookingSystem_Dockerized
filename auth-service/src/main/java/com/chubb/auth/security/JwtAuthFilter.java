@@ -33,6 +33,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
+        String uri = request.getRequestURI();
+
+        // Skip public endpoints
+        if (uri.contains("/auth/login") || uri.contains("/auth/register")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -40,19 +48,32 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             String jwt = authHeader.substring(7);
 
             try {
-                //Extract claims
                 Claims claims = jwtUtil.extractAllClaims(jwt);
 
-                String email = claims.getSubject(); // same as extractUsername
+                String email = claims.getSubject();
                 String role = claims.get("role", String.class);
+
+                Boolean forceChange =
+                        claims.get("forcePasswordChange", Boolean.class);
 
                 if (email != null &&
                     role != null &&
                     SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                    //Create authority from role
+                    // Force password change check
+                    if (Boolean.TRUE.equals(forceChange)
+                    	    && !"ADMIN".equalsIgnoreCase(role)
+                    	    && !uri.startsWith("/api/auth")) {
+
+                        response.sendError(
+                                HttpServletResponse.SC_FORBIDDEN,
+                                "Password expired. Change password required."
+                        );
+                        return;
+                    }
+
                     List<SimpleGrantedAuthority> authorities =
-                            List.of(new SimpleGrantedAuthority(role));
+                            List.of(new SimpleGrantedAuthority("ROLE_" + role));
 
                     UsernamePasswordAuthenticationToken auth =
                             new UsernamePasswordAuthenticationToken(
@@ -62,15 +83,20 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                             );
 
                     auth.setDetails(
-                            new WebAuthenticationDetailsSource().buildDetails(request)
+                            new WebAuthenticationDetailsSource()
+                                    .buildDetails(request)
                     );
 
-                    SecurityContextHolder.getContext().setAuthentication(auth);
+                    SecurityContextHolder.getContext()
+                            .setAuthentication(auth);
                 }
 
             } catch (Exception e) {
-             
-                System.out.println("JWT validation failed: " + e.getMessage());
+                response.sendError(
+                        HttpServletResponse.SC_UNAUTHORIZED,
+                        "Invalid or expired JWT"
+                );
+                return;
             }
         }
 

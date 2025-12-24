@@ -29,10 +29,11 @@ public class JwtUtil {
 
     /* ================= TOKEN GENERATION ================= */
 
-    public String generateToken(String name, String role, String email) {
+    public String generateToken(String name, String role, String email, boolean forcePasswordChange) {
         return Jwts.builder()
         		.claim("name", name) 
         		.claim("role", role)
+        		.claim("forcePasswordChange", forcePasswordChange)
         		.setSubject(email)             
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))

@@ -7,12 +7,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.chubb.auth.dto.ChangePasswordRequest;
 import com.chubb.auth.dto.JwtResponse;
 import com.chubb.auth.dto.LoginRequest;
 import com.chubb.auth.dto.RegisterRequest;
+import com.chubb.auth.dto.ResetPasswordRequest;
 import com.chubb.auth.service.AuthService;
 
 @RestController
@@ -43,5 +45,24 @@ public class AuthController {
     ) {
         authService.changePassword(auth.getName(), req);
         return ResponseEntity.ok("Password updated");
+    }
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(
+            @RequestParam String email) {
+
+        authService.forgotPassword(email);
+        return ResponseEntity.ok("Password reset link sent");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(
+            @RequestBody ResetPasswordRequest request) {
+
+        authService.resetPassword(
+                request.getToken(),
+                request.getNewPassword()
+        );
+
+        return ResponseEntity.ok("Password reset successful");
     }
 }
