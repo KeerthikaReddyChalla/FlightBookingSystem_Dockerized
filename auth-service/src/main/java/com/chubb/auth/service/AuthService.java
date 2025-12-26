@@ -2,17 +2,24 @@ package com.chubb.auth.service;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.chubb.auth.config.RabbitConfig;
 import com.chubb.auth.dto.ChangePasswordRequest;
 import com.chubb.auth.dto.JwtResponse;
 import com.chubb.auth.dto.LoginRequest;
+import com.chubb.auth.dto.PasswordResetToken;
 import com.chubb.auth.dto.RegisterRequest;
+import com.chubb.auth.dto.ResetPasswordMessage;
+import com.chubb.auth.dto.ResetPasswordRequest;
 import com.chubb.auth.exception.UserAlreadyExistsException;
 import com.chubb.auth.models.User;
+import com.chubb.auth.repository.PasswordResetTokenRepository;
 import com.chubb.auth.repository.UserRepository;
 import com.chubb.auth.security.JwtUtil;
 
@@ -22,13 +29,18 @@ import jakarta.ws.rs.BadRequestException;
 public class AuthService {
 
     private final UserRepository repo;
+    private final PasswordResetTokenRepository Tokenrepo;
     private final PasswordEncoder encoder;
     private final JwtUtil jwtUtil;
+    private final AmqpTemplate amqpTemplate;
 
-    public AuthService(UserRepository repo, PasswordEncoder encoder, JwtUtil jwtUtil) {
+    public AuthService(UserRepository repo, PasswordEncoder encoder, JwtUtil jwtUtil, PasswordResetTokenRepository Tokenrepo,
+    		AmqpTemplate amqpTemplate) {
         this.repo = repo;
         this.encoder = encoder;
         this.jwtUtil = jwtUtil;
+        this.Tokenrepo=Tokenrepo;
+        this.amqpTemplate = amqpTemplate;
     }
 
     // ========================= REGISTER =========================
@@ -67,13 +79,13 @@ public class AuthService {
         boolean forcePasswordChange = false;
         long DAYS_LIMIT = 60;
 
-        // 🚨 IMPORTANT: DO NOT force password change for ADMIN
+
         if (!"ROLE_ADMIN".equalsIgnoreCase(user.getRole())) {
 
             LocalDateTime lastChanged = user.getPasswordLastChangedAt();
 
             if (lastChanged == null) {
-                // legacy user safety
+         
                 forcePasswordChange = true;
                 user.setPasswordLastChangedAt(LocalDateTime.now());
             } else {
@@ -116,48 +128,66 @@ public class AuthService {
     // ========================= FORGOT PASSWORD =========================
     public void forgotPassword(String email) {
 
-        User user = repo.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    	Optional<User> userOpt = repo.findByEmail(email);
+
+    	if (userOpt.isEmpty()) {
+    	    return; 
+    	}
+
+    	User user = userOpt.get();
+        if (user == null) return; 
 
         String token = UUID.randomUUID().toString();
 
-        user.setResetToken(token);
-        user.setResetTokenExpiry(
-                LocalDateTime.now().plusMinutes(15)
+        PasswordResetToken resetToken = new PasswordResetToken(
+            token,
+            email,
+            LocalDateTime.now().plusMinutes(15)
         );
 
-        repo.save(user);
+        Tokenrepo.save(resetToken);
 
-        // DEV MODE: printed to console
-        System.out.println(
-            "Reset link: http://localhost:4200/reset-password?token=" + token
+        String resetLink =
+            "http://localhost:4200/reset-password?token=" + token;
+
+        ResetPasswordMessage msg =
+                new ResetPasswordMessage(email, resetLink);
+
+        amqpTemplate.convertAndSend(
+        		 "reset.password.queue",
+                msg
         );
+
     }
+
 
 
     public void resetPassword(String token, String newPassword) {
 
-        User user = repo.findByResetToken(token)
-                .orElseThrow(() -> new RuntimeException("Invalid reset token"));
+        System.out.println("RESET TOKEN RECEIVED IN SERVICE: " + token);
 
-        if (user.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
+        PasswordResetToken resetToken =
+                Tokenrepo.findById(token).orElse(null);
+
+        System.out.println("TOKEN FOUND IN DB: " + resetToken);
+
+        if (resetToken == null) {
+            throw new RuntimeException("Invalid reset token");
+        }
+
+        if (resetToken.getExpiryTime().isBefore(LocalDateTime.now())) {
             throw new RuntimeException("Reset token expired");
         }
 
-  
-        if (!newPassword.matches(
-                "^(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&]).{8,}$")) {
-            throw new RuntimeException("Password does not meet policy");
-        }
+        User user = repo.findByEmail(resetToken.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         user.setPassword(encoder.encode(newPassword));
-        user.setPasswordLastChangedAt(LocalDateTime.now());
         user.setForcePasswordChange(false);
 
-        // clear reset token
-        user.setResetToken(null);
-        user.setResetTokenExpiry(null);
+       repo.save(user);
 
-        repo.save(user);
+        Tokenrepo.deleteById(token);
     }
+
 }

@@ -35,8 +35,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         String uri = request.getRequestURI();
 
+        String method = request.getMethod();
+
+        if ("OPTIONS".equalsIgnoreCase(method)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         // Skip public endpoints
-        if (uri.contains("/auth/login") || uri.contains("/auth/register")) {
+        if (uri.contains("/auth/login") || uri.contains("/auth/register") || uri.contains("/auth/forgot-password")
+                || uri.contains("/auth/reset-password")) {
             filterChain.doFilter(request, response);
             return;
         }

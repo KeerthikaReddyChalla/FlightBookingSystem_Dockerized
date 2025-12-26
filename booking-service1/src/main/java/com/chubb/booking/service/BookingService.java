@@ -23,45 +23,54 @@ public class BookingService {
     private final FlightClient flightClient;
     private final AmqpTemplate amqp;
 
-    public BookingService(BookingRepository repo, FlightClient flightClient, AmqpTemplate amqp) {
+    public BookingService(BookingRepository repo,
+                          FlightClient flightClient,
+                          AmqpTemplate amqp) {
         this.repo = repo;
         this.flightClient = flightClient;
         this.amqp = amqp;
     }
 
     public Booking book(String flightId, BookingRequest req, String principalEmail) {
-    	
-    	
-        // ensure logged-in user
-    	// allow booking with any email
-    	if (principalEmail == null) {
-    	    throw new BadRequestException("User must be logged in to book a flight");
-    	}
 
+        if (principalEmail == null) {
+            throw new BadRequestException("User must be logged in to book a flight");
+        }
+
+        if (req.getSeatNumbers() == null || req.getSeatNumbers().isEmpty()) {
+            throw new BadRequestException("No seats selected");
+        }
+
+        if (req.getPassengers() == null ||
+            req.getPassengers().size() != req.getSeatNumbers().size()) {
+            throw new BadRequestException("Passenger count and seat count must match");
+        }
 
         FlightInventoryDto flight = flightClient.getById(flightId);
-        if (flight == null) throw new BadRequestException("Flight not found");
+        if (flight == null) {
+            throw new BadRequestException("Flight not found");
+        }
 
-        if (req.getSeats() > (flight.getAvailableSeats() == null ? 0 : flight.getAvailableSeats())) {
+        if (flight.getAvailableSeats() < req.getSeatNumbers().size()) {
             throw new BadRequestException("Not enough seats available");
         }
-        //decrease seats after booking
-        flightClient.decreaseSeats(flightId, req.getSeats());
-        flightClient.bookSeats(flightId, req.getSeatNumbers());
-        flightClient.lockSeats(flightId, req.getSeatNumbers());
-        Booking b = new Booking();
-        b.setFlightId(flightId);
-        b.setName(req.getName());
-        b.setEmail(req.getEmail());
-        b.setSeats(req.getSeats());
-        b.setPassengers(req.getPassengers());
-        b.setMeal(req.getMeal());
-        b.setSeatNumbers(req.getSeatNumbers());
-        b.setBookingTime(LocalDateTime.now());
-        b.setFlightDeparture(flight.getDeparture());
-        b.setPnr(generatePnr());
 
-        Booking saved = repo.save(b);
+        // 🔒 SINGLE call – transactional in FlightService
+        flightClient.bookSeats(flightId, req.getSeatNumbers());
+
+        Booking booking = new Booking();
+        booking.setFlightId(flightId);
+        booking.setName(req.getName());
+        booking.setEmail(req.getEmail());
+        booking.setSeats(req.getSeatNumbers().size());
+        booking.setPassengers(req.getPassengers());
+        booking.setMeal(req.getMeal());
+        booking.setSeatNumbers(req.getSeatNumbers());
+        booking.setBookingTime(LocalDateTime.now());
+        booking.setFlightDeparture(flight.getDeparture());
+        booking.setPnr(generatePnr());
+
+        Booking saved = repo.save(booking);
 
         NotificationMessage msg = new NotificationMessage(
                 saved.getEmail(),
@@ -69,22 +78,24 @@ public class BookingService {
                 "Hello " + saved.getName() + ",\n\n" +
                 "Your booking was successful!\n\n" +
                 "PNR: " + saved.getPnr() + "\n" +
-                "Seats Booked: " + saved.getSeats() + "\n\n" +
+                "Seats: " + String.join(", ", saved.getSeatNumbers()) + "\n\n" +
                 "Thank you for choosing our service!"
         );
 
-        amqp.convertAndSend(RabbitConfig.EXCHANGE, RabbitConfig.ROUTING_KEY, msg);
-
-
-       
-
+        amqp.convertAndSend(
+                RabbitConfig.EXCHANGE,
+                RabbitConfig.ROUTING_KEY,
+                msg
+        );
 
         return saved;
     }
 
     public Booking getByPnr(String pnr) {
         Booking b = repo.findByPnr(pnr);
-        if (b == null) throw new BookingNotFoundException("PNR not found: " + pnr);
+        if (b == null) {
+            throw new BookingNotFoundException("PNR not found: " + pnr);
+        }
         return b;
     }
 
@@ -93,44 +104,41 @@ public class BookingService {
     }
 
     public void cancel(String pnr) {
+
         Booking b = repo.findByPnr(pnr);
-        if (b == null) throw new BookingNotFoundException("PNR not found: " + pnr);
-        if (b.getFlightDeparture() == null) throw new BadRequestException("Flight departure unknown");
+        if (b == null) {
+            throw new BookingNotFoundException("PNR not found: " + pnr);
+        }
+
         if (b.getFlightDeparture().isBefore(LocalDateTime.now().plusHours(24))) {
             throw new BadRequestException("Cannot cancel within 24 hours of departure");
         }
-        //increase seats if booking cancelled
-//        flightClient.increaseSeats(b.getFlightId(), b.getSeats());
+
         flightClient.unbookSeats(
-        	    b.getFlightId(),
-        	    b.getSeatNumbers()
-        	);
+                b.getFlightId(),
+                b.getSeatNumbers()
+        );
+
         b.setCancelled(true);
-       // b.setSeatNumbers(req.getSeatNumbers());
-
         repo.save(b);
-        //cancellation email
+
         NotificationMessage notification = new NotificationMessage(
-        	    b.getEmail(),
-        	    "Flight Ticket Cancelled - PNR " + b.getPnr(),
-        	    "Dear Customer,\n\n" +
-        	    "Your flight ticket has been successfully cancelled.\n\n" +
-        	    "PNR: " + b.getPnr() + "\n" +
-        	    "Flight ID: " + b.getFlightId() + "\n" +
-        	    "Cancelled Seats: " + b.getSeats() + "\n\n" +
-        	    "If you have any questions, please contact support.\n\n" +
-        	    "Regards,\nFlight Booking Team"
-        	);
+                b.getEmail(),
+                "Flight Ticket Cancelled - PNR " + b.getPnr(),
+                "Your booking has been cancelled.\n\nPNR: " + b.getPnr()
+        );
 
-        	amqp.convertAndSend(
-        	    RabbitConfig.EXCHANGE,
-        	    RabbitConfig.ROUTING_KEY,   
-        	    notification
-        	);
-
+        amqp.convertAndSend(
+                RabbitConfig.EXCHANGE,
+                RabbitConfig.ROUTING_KEY,
+                notification
+        );
     }
 
     private String generatePnr() {
-        return "PNR-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        return "PNR-" + UUID.randomUUID()
+                .toString()
+                .substring(0, 8)
+                .toUpperCase();
     }
 }

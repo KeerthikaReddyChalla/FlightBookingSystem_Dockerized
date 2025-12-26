@@ -1,6 +1,8 @@
 package com.chubb.notify.listener;
 
+import com.chubb.notify.config.RabbitConfig;
 import com.chubb.notify.model.NotificationMessage;
+import com.chubb.notify.model.ResetPasswordMessage;
 import com.chubb.notify.service.EmailService;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
@@ -25,6 +27,18 @@ public class NotificationListener {
         }
 
         emailService.send(msg);
+    }
+    @RabbitListener(queues = RabbitConfig.RESET_PASSWORD_QUEUE)
+    public void handleResetPassword(ResetPasswordMessage msg) {
+
+        System.out.println("Received Reset Password Message: " + msg);
+
+        if (msg == null) return;
+
+        emailService.sendResetPasswordMail(
+                msg.getEmail(),
+                msg.getResetLink()
+        );
     }
 
   
