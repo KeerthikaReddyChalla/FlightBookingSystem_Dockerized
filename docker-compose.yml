@@ -57,6 +57,8 @@ services:
       - auth-service
       - config-server1
       - eureka-server
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
 
   flight-service:
     build: ./flight-service
@@ -66,6 +68,7 @@ services:
     depends_on:
       - mongodb
       - eureka-server
+      - config-server1
 
   booking-service1:
     build: ./booking-service1
@@ -76,6 +79,8 @@ services:
       - mongodb
       - rabbitmq
       - flight-service
+      - eureka-server
+      - config-server1
 
   notification-service1:
     build: ./notification-service1
@@ -84,6 +89,8 @@ services:
       - "8093:8093"
     depends_on:
       - rabbitmq
+      - eureka-server
+      - config-server1
 
 volumes:
   mongo_data:
