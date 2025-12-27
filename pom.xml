@@ -15,9 +15,12 @@
     <!-- 🔹 All microservices -->
     <modules>
         <module>auth-service</module>
+        <module>api-gateway</module>
+        <module>eureka-service</module>
+        <module>config-service1</module>
         <module>flight-service</module>
-        <module>booking-service</module>
-        <module>notification-service</module>
+        <module>booking-service1</module>
+        <module>notification-service1</module>
     </modules>
 
     <!-- 🔹 Common properties -->
