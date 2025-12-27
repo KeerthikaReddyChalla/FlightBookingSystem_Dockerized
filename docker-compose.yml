@@ -1,10 +1,5 @@
-version: "3.9"
-
 services:
 
-  # ===================
-  # MongoDB
-  # ===================
   mongodb:
     image: mongo:6
     container_name: mongodb
@@ -14,9 +9,6 @@ services:
     volumes:
       - mongo_data:/data/db
 
-  # ===================
-  # RabbitMQ
-  # ===================
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
@@ -25,25 +17,17 @@ services:
       - "5672:5672"
       - "15672:15672"
 
-  # ===================
-  # Eureka Server
-  # ===================
   eureka-server:
-    image: flight-eureka-server
+    build: ./eureka-server
     container_name: eureka-server
-    restart: always
     ports:
       - "8761:8761"
     environment:
       SPRING_PROFILES_ACTIVE: docker
 
-  # ===================
-  # Config Server
-  # ===================
-  config-server:
-    image: flight-config-server
-    container_name: config-server
-    restart: always
+  config-server1:
+    build: ./config-server1
+    container_name: config-server1
     ports:
       - "8888:8888"
     depends_on:
@@ -51,102 +35,55 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
 
-  # ===================
-  # Auth Service
-  # ===================
   auth-service:
-    image: flight-auth-service
+    build: ./auth-service
     container_name: auth-service
-    restart: always
     ports:
       - "9000:9000"
     depends_on:
       - mongodb
       - eureka-server
-      - config-server
+      - config-server1
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/authdb
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
 
-  # ===================
-  # API Gateway
-  # ===================
   api-gateway:
-    image: flight-api-gateway
+    build: ./api-gateway
     container_name: api-gateway
-    restart: always
     ports:
       - "8080:8080"
     depends_on:
       - auth-service
+      - config-server1
       - eureka-server
-      - config-server
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
 
-  # ===================
-  # Flight Service
-  # ===================
   flight-service:
-    image: flight-flight-service
+    build: ./flight-service
     container_name: flight-service
-    restart: always
     ports:
       - "8091:8091"
     depends_on:
       - mongodb
       - eureka-server
-      - config-server
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/flightmicrodb
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
 
-  # ===================
-  # Booking Service
-  # ===================
-  booking-service:
-    image: flight-booking-service
-    container_name: booking-service
-    restart: always
+  booking-service1:
+    build: ./booking-service1
+    container_name: booking-service1
     ports:
       - "8092:8092"
     depends_on:
       - mongodb
       - rabbitmq
       - flight-service
-      - eureka-server
-      - config-server
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/bookingmicrodb
-      SPRING_RABBITMQ_HOST: rabbitmq
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
 
-  # ===================
-  # Notification Service
-  # ===================
-  notification-service:
-    image: flight-notification-service
-    container_name: notification-service
-    restart: always
+  notification-service1:
+    build: ./notification-service1
+    container_name: notification-service1
     ports:
       - "8093:8093"
     depends_on:
       - rabbitmq
-      - eureka-server
-      - config-server
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_RABBITMQ_HOST: rabbitmq
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
 
 volumes:
   mongo_data:
