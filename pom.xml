@@ -12,7 +12,7 @@
 
     <name>Flight Microservices Parent</name>
 
-    <!-- 🔹 All microservices -->
+    <!-- ✅ Modules -->
     <modules>
         <module>auth-service</module>
         <module>api-gateway</module>
@@ -23,19 +23,20 @@
         <module>notification-service1</module>
     </modules>
 
-    <!-- 🔹 Common properties -->
+    <!-- ✅ Common Properties -->
     <properties>
-    <java.version>17</java.version>
-    <maven.compiler.source>17</maven.compiler.source>
-    <maven.compiler.target>17</maven.compiler.target>
-    <spring.boot.version>3.1.4</spring.boot.version>
-</properties>
+        <java.version>17</java.version>
+        <spring.boot.version>3.1.4</spring.boot.version>
+        <spring.cloud.version>2022.0.4</spring.cloud.version>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+    </properties>
 
-
-    <!-- 🔹 Dependency versions (shared) -->
+    <!-- ✅ Dependency Management -->
     <dependencyManagement>
         <dependencies>
 
+            <!-- Spring Boot BOM -->
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
@@ -44,22 +45,37 @@
                 <scope>import</scope>
             </dependency>
 
+            <!-- Spring Cloud BOM (MATCHING Boot 3.1.x) -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring.cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
-    <!-- 🔹 Plugin versions -->
+    <!-- ✅ Plugin Management -->
     <build>
         <pluginManagement>
             <plugins>
+
                 <plugin>
-                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version>
-                <configuration>
-                    <source>17</source>
-                    <target>17</target>
-                </configuration>
-                 </plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.11.0</version>
+                    <configuration>
+                        <source>17</source>
+                        <target>17</target>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                </plugin>
 
             </plugins>
         </pluginManagement>
