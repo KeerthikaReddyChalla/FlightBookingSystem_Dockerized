@@ -6,11 +6,12 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.3</version>
-    </parent>
+ <parent>
+    <groupId>com.flightapp</groupId>
+    <artifactId>flight-microservices</artifactId>
+    <version>1.0.0</version>
+    <relativePath>../pom.xml</relativePath>
+</parent>
 
     <groupId>com.demo</groupId>
     <artifactId>flight-service</artifactId>
@@ -142,6 +143,16 @@
     <artifactId>sonar-maven-plugin</artifactId>
     <version>3.10.0.2594</version>
 </plugin>
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <version>3.11.0</version>
+    <configuration>
+        <source>17</source>
+        <target>17</target>
+    </configuration>
+</plugin>
+
 
 
     </plugins>

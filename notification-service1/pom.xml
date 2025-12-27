@@ -6,17 +6,18 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.8</version>
-    </parent>
+    <groupId>com.flightapp</groupId>
+    <artifactId>flight-microservices</artifactId>
+    <version>1.0.0</version>
+    <relativePath>../pom.xml</relativePath>
+</parent>
 
     <groupId>com.chubb</groupId>
     <artifactId>notification-service1</artifactId>
     <version>1.0.0</version>
 
     <properties>
-        <java.version>17</java.version>
+     
         <spring-cloud.version>2025.0.0</spring-cloud.version>
     </properties>
 
